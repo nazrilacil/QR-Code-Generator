@@ -1,4 +1,8 @@
 @import "tailwindcss";
+#qrcode canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
 #qr-wrapper {
         position: relative;
         width: 200px;
