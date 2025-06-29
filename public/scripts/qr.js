@@ -1,39 +1,22 @@
 window.addEventListener('DOMContentLoaded', () => {
-  if (typeof QRCode === 'undefined' || !QRCode.CorrectLevel) {
-    console.error('QRCode library belum siap!');
-    return;
-  }
+  const canvas = document.getElementById("qr-canvas");
+  const ctx = canvas.getContext("2d");
+  const logoURL = "https://github.com/nazrilacil/nazrilacil.github.io/blob/main/src/png/main-favicon.png?raw=true";
 
   const loadingSpinner = document.getElementById("loading");
-
-  const showLoading = () => {
-    if (loadingSpinner) loadingSpinner.classList.remove("hidden");
-  };
-
-  const hideLoading = () => {
-    if (loadingSpinner) loadingSpinner.classList.add("hidden");
-  };
+  const showLoading = () => loadingSpinner?.classList.remove("hidden");
+  const hideLoading = () => loadingSpinner?.classList.add("hidden");
 
   window.generateQRCode = () => {
-    const textInput = document.getElementById("text");
-    const colorInput = document.getElementById("qrColor");
-    
-
-    if (!textInput || !colorInput ) return;
-
-    const text = textInput.value;
-    const color = colorInput.value;
-    const logoURL = "https://github.com/nazrilacil/nazrilacil.github.io/blob/main/src/png/main-favicon.png?raw=true";
+    const text = document.getElementById("text")?.value;
+    const color = document.getElementById("qrColor")?.value || "#000000";
     if (!text) return;
-
-    const qrcodeContainer = document.getElementById("qrcode");
-    if (!qrcodeContainer) return;
-    qrcodeContainer.innerHTML = '';
 
     showLoading();
 
     setTimeout(() => {
-      new QRCode(qrcodeContainer, {
+      const tempDiv = document.createElement("div");
+      new QRCode(tempDiv, {
         text,
         width: 200,
         height: 200,
@@ -42,67 +25,90 @@ window.addEventListener('DOMContentLoaded', () => {
         correctLevel: QRCode.CorrectLevel.H,
       });
 
-      const logo = document.getElementById("qr-logo");
-      if (logo) {
-        if (logoURL) {
-          logo.src = logoURL;
-          logo.style.display = "block";
-        } else {
-          logo.style.display = "none";
-        }
-      }
+      const qrCanvas = tempDiv.querySelector("canvas");
+      if (!qrCanvas) return;
 
-      hideLoading();
-    }, 500);
+      ctx.clearRect(0, 0, 200, 200);
+      ctx.drawImage(qrCanvas, 0, 0);
+
+      const logoImg = new Image();
+      logoImg.crossOrigin = "anonymous";
+      logoImg.src = logoURL;
+      logoImg.onload = () => {
+        const size = 40;
+        const x = (canvas.width - size) / 2;
+        const y = (canvas.height - size) / 2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x + size/2, y + size/2, size/2, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(logoImg, x, y, size, size);
+        ctx.restore();
+        hideLoading();
+      };
+    }, 300);
   };
 
   window.downloadQR = () => {
-    const canvas = document.querySelector('#qrcode canvas');
-    if (!canvas) return;
     const link = document.createElement('a');
-    const date = new Date();
-    link.download = `QRcode_AcilCode${date}.png`;
+    link.download = `QRcode_AcilCode_${Date.now()}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
 
   window.shareQR = () => {
-    const textInput = document.getElementById("text");
-    if (!textInput) return;
-    const text = textInput.value;
+    const text = document.getElementById("text")?.value;
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent("Coba lihat QR ini: " + text)}`;
     window.open(url, "_blank");
   };
 
   window.generateBatch = () => {
-  const batchInput = document.getElementById("batchInput");
-  const container = document.getElementById("batchResult");
-  if (!batchInput || !container) return;
+    const lines = document.getElementById("batchInput")?.value.trim().split("\n").filter(Boolean);
+    const container = document.getElementById("batchResult");
+    if (!lines || !container) return;
+    container.innerHTML = '';
 
-  const lines = batchInput.value.trim().split("\n").filter(Boolean);
-  container.innerHTML = '';
+    lines.forEach(line => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'relative w-[150px] h-[150px] mx-auto';
 
-  lines.forEach(line => {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'relative w-fit mx-auto';
+      const tempDiv = document.createElement("div");
+      new QRCode(tempDiv, {
+        text: line,
+        width: 150,
+        height: 150,
+        correctLevel: QRCode.CorrectLevel.H
+      });
 
-    const qrDiv = document.createElement('div');
-    new QRCode(qrDiv, {
-      text: line,
-      width: 150,
-      height: 150,
+      const qrCanvas = tempDiv.querySelector("canvas");
+
+      const canvasBatch = document.createElement("canvas");
+      canvasBatch.width = 150;
+      canvasBatch.height = 150;
+      const ctxBatch = canvasBatch.getContext("2d");
+      ctxBatch.drawImage(qrCanvas, 0, 0);
+
+      const logoImg = new Image();
+      logoImg.crossOrigin = "anonymous";
+      logoImg.src = logoURL;
+      logoImg.onload = () => {
+        const size = 30;
+        const x = (canvasBatch.width - size) / 2;
+        const y = (canvasBatch.height - size) / 2;
+        ctxBatch.save();
+        ctxBatch.beginPath();
+        ctxBatch.arc(x + size/2, y + size/2, size/2, 0, Math.PI * 2);
+        ctxBatch.clip();
+        ctxBatch.drawImage(logoImg, x, y, size, size);
+        ctxBatch.restore();
+
+        const img = new Image();
+        img.src = canvasBatch.toDataURL("image/png");
+        wrapper.appendChild(img);
+        container.appendChild(wrapper);
+      };
     });
-
-    const logo = document.createElement('img');
-    logo.src = "https://github.com/nazrilacil/nazrilacil.github.io/blob/main/src/png/main-favicon.png?raw=true";
-    logo.className = "w-8 h-8 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none";
-
-    wrapper.appendChild(qrDiv);
-    wrapper.appendChild(logo);
-    container.appendChild(wrapper);
-  });
-};
-
+  };
 
   if (window.lucide) {
     window.lucide.createIcons();
@@ -110,11 +116,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 const toggle = document.getElementById('mobileMenuToggle');
 const menu = document.getElementById('mobileMenu');
-toggle.addEventListener('click', () => {
-  menu.classList.toggle('hidden');
+toggle?.addEventListener('click', () => {
+  menu?.classList.toggle('hidden');
 });
-AOS.init({
-  once: true, 
-  duration: 800, 
-  offset: 100, 
-});
+AOS?.init({ once: true, duration: 800, offset: 100 });
