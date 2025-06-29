@@ -1,11 +1,22 @@
 ---
+import Header from '../components/Header.astro';
 import Welcome from '../components/Welcome.astro';
+import QR from '../components/QR.astro';
+import CaraPenggunaan from '../components/CaraPenggunaan.astro';
+import ApaItuQR from '../components/ApaItuQR.astro';
+import Footer from '../components/Footer.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import '../style/global.css';
 ---
 
 <Layout>
+  <Header />
 	<Welcome />
+	<QR />
+  <CaraPenggunaan />
+  <ApaItuQR />
+  <Footer />
+  <script src="/qrcode.min.js" is:inline></script>
+  <script src="https://unpkg.com/lucide@latest" is:inline></script>
+  <script type="module" src="/scripts/qr.js" is:inline></script>
 </Layout>
